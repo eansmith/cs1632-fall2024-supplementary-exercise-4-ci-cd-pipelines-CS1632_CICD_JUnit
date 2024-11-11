@@ -1,5 +1,4 @@
 name: Maven CI
-
 - name: Restore cached build
   uses: actions/cache@v3
   with:
