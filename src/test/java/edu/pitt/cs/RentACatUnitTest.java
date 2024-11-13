@@ -12,6 +12,8 @@ import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RentACatUnitTest {
@@ -40,34 +42,27 @@ public class RentACatUnitTest {
 		// 1. Create a new RentACat object and assign to r using a call to RentACat.createInstance(InstanceType).
 		// Passing InstanceType.IMPL as the first parameter will create a real RentACat object using your RentACatImpl implementation.
 		// Passing InstanceType.MOCK as the first parameter will create a mock RentACat object using Mockito.
-		// Which type is the correct choice for this unit test?  I'll leave it up to you.  The answer is in the Unit Testing Part 2 lecture. :)
-		// TODO: Fill in
+		// Which type is the correct choice for this integration test?  I'll leave it up to you.  The answer is in the Unit Testing Part 2 lecture. :)
 		r = RentACat.createInstance(InstanceType.IMPL);
+
 		// 2. Create a Cat with ID 1 and name "Jennyanydots", assign to c1 using a call to Cat.createInstance(InstanceType, int, String).
 		// Passing InstanceType.IMPL as the first parameter will create a real cat using your CatImpl implementation.
 		// Passing InstanceType.MOCK as the first parameter will create a mock cat using Mockito.
-		// Which type is the correct choice for this unit test?  Again, I'll leave it up to you.
-		// TODO: Fill in
-		c1 = Cat.createInstance(InstanceType.IMPL, 1, "Jennyanydots");
-		r.addCat(c1);
-		
+		// Which type is the correct choice for this integration test?  Again, I'll leave it up to you.
+		c1 = Cat.createInstance(InstanceType.MOCK, 1, "Jennyanydots");
+
 		// 3. Create a Cat with ID 2 and name "Old Deuteronomy", assign to c2 using a call to Cat.createInstance(InstanceType, int, String).
-		// TODO: Fill in
-		c2 = Cat.createInstance(InstanceType.IMPL, 2, "Old Deuteronomy");
-		r.addCat(c2);
+		c2 = Cat.createInstance(InstanceType.MOCK, 2, "Old Deuteronomy");
 
 		// 4. Create a Cat with ID 3 and name "Mistoffelees", assign to c3 using a call to Cat.createInstance(InstanceType, int, String).
-		// TODO: Fill in
-		c3 = Cat.createInstance(InstanceType.IMPL, 3, "Mistoffelees");
-		r.addCat(c3);
+		c3 = Cat.createInstance(InstanceType.MOCK, 3, "Mistoffelees");
 
 		// 5. Redirect system output from stdout to the "out" stream
 		// First, make a back up of System.out (which is the stdout to the console)
 		stdout = System.out;
 		// Second, update System.out to the PrintStream created from "out"
-		// TODO: Fill in.  Refer to the textbook chapter 14.6 on Testing System Output.
 		out = new ByteArrayOutputStream();
-    	System.setOut(new PrintStream(out));
+		System.setOut(new PrintStream(out));
 	}
 
 	@After
@@ -97,26 +92,27 @@ public class RentACatUnitTest {
 	 * method. efer to the Unit Testing Part 1 lecture and the textbook appendix 
 	 * hapter on using reflection on how to do this.  Please use r.getClass() to get
 	 * the class object of r instead of hardcoding it as RentACatImpl.
+	 * @throws InvocationTargetException 
+	 * @throws IllegalArgumentException 
+	 * @throws IllegalAccessException 
+	 * @throws SecurityException 
+	 * @throws NoSuchMethodException 
 	 */
 	@Test
-	public void testGetCatNullNumCats0() {
-		r = RentACat.createInstance(InstanceType.IMPL);
-		out.reset();
-		Cat cat = null;
+	public void testGetCatNullNumCats0() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		try {
-			java.lang.reflect.Method method = r.getClass().getDeclaredMethod("getCat", int.class);
+			Method method = r.getClass().getDeclaredMethod("getCat", int.class);
 			method.setAccessible(true);
-			cat = (Cat) method.invoke(r, 2);
-		} catch (Exception e) {
+			method.invoke(r, 2);
+			assertEquals("Invalid cat ID." + System.lineSeparator(), out.toString());
+		} catch (NoSuchMethodException e) {
+			System.out.println("Unable to find getCat method ");
+			e.printStackTrace();
+		} catch (SecurityException e) {
 			e.printStackTrace();
 		}
-
-		assertNull( cat);
-
-		String systemOut = out.toString();
-		assertEquals("Invalid cat ID." + newline, systemOut);
+			
 	}
-
 
 	/**
 	 * Test case for Cat getCat(int id).
@@ -132,31 +128,28 @@ public class RentACatUnitTest {
 	 * method. efer to the Unit Testing Part 1 lecture and the textbook appendix 
 	 * hapter on using reflection on how to do this.  Please use r.getClass() to get
 	 * the class object of r instead of hardcoding it as RentACatImpl.
+	 * @throws InvocationTargetException 
+	 * @throws IllegalArgumentException 
+	 * @throws IllegalAccessException 
 	 */
 	@Test
-	public void testGetCatNumCats3() {
-		// TODO: Fill in
-		r = RentACat.createInstance(InstanceType.IMPL);
-    
-		c1 = Cat.createInstance(InstanceType.IMPL, 1, "Jennyanydots");
-		c2 = Cat.createInstance(InstanceType.IMPL, 2, "Old Deuteronomy");
-		c3 = Cat.createInstance(InstanceType.IMPL, 3, "Mistoffelees");
-	
+	public void testGetCatNumCats3() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		r.addCat(c1);
 		r.addCat(c2);
 		r.addCat(c3);
-	
-		out.reset();
-		Cat cat = null;
 		try {
-			java.lang.reflect.Method method = r.getClass().getDeclaredMethod("getCat", int.class);
+			Method method = r.getClass().getDeclaredMethod("getCat", int.class);
 			method.setAccessible(true);
-			cat = (Cat) method.invoke(r, 2);
-		} catch (Exception e) {
+			Cat cat = (Cat) method.invoke(r, 2);
+			//assertEquals("Invalid cat ID.\n", out.toString());
+			assertNotNull(cat);
+			assertEquals(2, cat.getId());
+		} catch (NoSuchMethodException e) {
+			System.out.println("Unable to find getCat method ");
+			e.printStackTrace();
+		} catch (SecurityException e) {
 			e.printStackTrace();
 		}
-		assertNotNull(cat);
-    	assertEquals(2, cat.getId());
 	}
 
 	/**
@@ -170,12 +163,8 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testListCatsNumCats0() {
-		// TODO: Fill in
-		r = RentACat.createInstance(InstanceType.IMPL); 
-		out.reset();
-
-		String result = r.listCats();
-		assertEquals( "", result);
+		String output = r.listCats();
+		assertEquals("",output);
 	}
 
 	/**
@@ -190,23 +179,11 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testListCatsNumCats3() {
-		// TODO: Fill in
-		r = RentACat.createInstance(InstanceType.IMPL); 
-
-		c1 = Cat.createInstance(InstanceType.IMPL, 1, "Jennyanydots");
-		c2 = Cat.createInstance(InstanceType.IMPL, 2, "Old Deuteronomy");
-		c3 = Cat.createInstance(InstanceType.IMPL, 3, "Mistoffelees");
-		
 		r.addCat(c1);
 		r.addCat(c2);
 		r.addCat(c3);
-	
-		out.reset();
-	
-		String result = r.listCats();
-		String expected = "ID 1. Jennyanydots\nID 2. Old Deuteronomy\nID 3. Mistoffelees\n";
-	
-		assertEquals(expected, result);
+		String output = r.listCats();
+		assertEquals("ID 1. Jennyanydots\nID 2. Old Deuteronomy\nID 3. Mistoffelees\n", output);
 	}
 
 	/**
@@ -226,25 +203,13 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testRenameFailureNumCats0() {
-		// TODO: Fill in
-		r = RentACat.createInstance(InstanceType.IMPL); 
-		out.reset();
-		boolean result = r.renameCat(2, "Garfield");
-		
-		assertFalse(result);
+		Boolean value = r.renameCat(2, "Garfield");
+		assertFalse(value);
 
-		String systemOut = out.toString();
-		assertEquals("Invalid cat ID." + newline, systemOut);
-		
-		Cat cat = null;
-		try {
-			java.lang.reflect.Method method = r.getClass().getDeclaredMethod("getCat", int.class);
-			method.setAccessible(true);
-			cat = (Cat) method.invoke(r, 2);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-    	assertNull(cat);
+		//String name = c2.getName();
+		//assertNotEquals("Garfield", name);
+		Mockito.verify(c2, Mockito.times(0)).renameCat("Garfield");
+		assertEquals("Invalid cat ID.\n", out.toString());
 	}
 
 	/**
@@ -263,33 +228,14 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testRenameNumCat3() {
-		// TODO: Fill in
-		r = RentACat.createInstance(InstanceType.IMPL); 
-		c1 = Cat.createInstance(InstanceType.IMPL, 1, "Jennyanydots");
-		c2 = Cat.createInstance(InstanceType.IMPL, 2, "Old Deuteronomy");
-		c3 = Cat.createInstance(InstanceType.IMPL, 3, "Mistoffelees");
 
 		r.addCat(c1);
 		r.addCat(c2);
 		r.addCat(c3);
-		out.reset();
+		Boolean value = r.renameCat(2, "Garfield");
+		assertTrue(value);
 
-		boolean result = r.renameCat(2, "Garfield");
-		assertTrue(result);
-	
-		Cat cat = null;
-		try {
-			java.lang.reflect.Method method = r.getClass().getDeclaredMethod("getCat", int.class);
-			method.setAccessible(true);
-			cat = (Cat) method.invoke(r, 2);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		assertNotNull(cat);
-		assertEquals("Garfield", cat.getName());
-		String systemOut = out.toString();
-    	assertEquals("", systemOut);
+		Mockito.verify(c2).renameCat("Garfield");
 	}
 
 	/**
@@ -309,37 +255,18 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testRentCatNumCats3() {
-		// TODO: Fill in
-		r = RentACat.createInstance(InstanceType.IMPL);
-		c1 = Cat.createInstance(InstanceType.IMPL, 1, "Jennyanydots");
-		c2 = Cat.createInstance(InstanceType.IMPL, 2, "Old Deuteronomy");
-		c3 = Cat.createInstance(InstanceType.IMPL, 3, "Mistoffelees");
-	
 		r.addCat(c1);
 		r.addCat(c2);
 		r.addCat(c3);
-	
-		out.reset();
-	
-		boolean result = r.rentCat(2);
-		assertTrue(result);
-	
-		Cat rentedCat = null;
-		try {
-			java.lang.reflect.Method method = r.getClass().getDeclaredMethod("getCat", int.class);
-			method.setAccessible(true);
-			rentedCat = (Cat) method.invoke(r, 2);
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail("Reflection failed");
-		}
-	
-		assertNotNull(rentedCat);
-		assertTrue(rentedCat.getRented());
-	
-		String systemOut = out.toString();
-		String expectedOutput = "Old Deuteronomy has been rented." + newline;
-		assertEquals(expectedOutput, systemOut);
+
+		Boolean output = r.rentCat(2);
+
+		assertTrue(output);
+
+		Mockito.verify(c2).rentCat();
+
+		assertEquals("Old Deuteronomy has been rented.\n", out.toString());
+
 	}
 
 	/**
@@ -360,27 +287,19 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testRentCatFailureNumCats3() {
-		// TODO: Fill in
-		r = RentACat.createInstance(InstanceType.IMPL); 
-		c1 = Cat.createInstance(InstanceType.IMPL, 1, "Jennyanydots");
-		c2 = Cat.createInstance(InstanceType.IMPL, 2, "Old Deuteronomy");
-		c3 = Cat.createInstance(InstanceType.IMPL, 3, "Mistoffelees");
-
 		r.addCat(c1);
 		r.addCat(c2);
 		r.addCat(c3);
+		Mockito.when(c2.getRented()).thenReturn(true);
+		Boolean value = r.rentCat(2);
 
-		r.rentCat(2);
-		out.reset();
+		assertFalse(value);
+		//assertFalse(c2.getRented());
+		
+		Mockito.verify(c2, times(0)).rentCat();
 
-		boolean result = r.rentCat(2);
-		assertFalse(result);
+		assertEquals("Sorry, Old Deuteronomy is not here!\n", out.toString());
 
-		Cat rentedCat = null;
-		assertFalse(result);
-
-		String systemOut = out.toString();
-		assertEquals("Sorry, Old Deuteronomy is not here!" + newline, systemOut);
 	}
 
 	/**
@@ -401,38 +320,17 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testReturnCatNumCats3() {
-		// TODO: Fill in
-		r = RentACat.createInstance(InstanceType.IMPL);
-		c1 = Cat.createInstance(InstanceType.IMPL, 1, "Jennyanydots");
-		c2 = Cat.createInstance(InstanceType.IMPL, 2, "Old Deuteronomy");
-		c3 = Cat.createInstance(InstanceType.IMPL, 3, "Mistoffelees");
-		
 		r.addCat(c1);
 		r.addCat(c2);
 		r.addCat(c3);
-		r.rentCat(2);
+		Mockito.when(c2.getRented()).thenReturn(true);
+		Boolean value = r.returnCat(2);
 
-		out.reset();
-		boolean result = r.returnCat(2);
+		assertTrue(value);
 
-		assertTrue(result);
-
-   	    Cat returnedCat = null;
-		   try {
-			java.lang.reflect.Method method = r.getClass().getDeclaredMethod("getCat", int.class);
-			method.setAccessible(true);
-			returnedCat = (Cat) method.invoke(r, 2);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		assertNotNull( returnedCat);
-		assertFalse( returnedCat.getRented()); 
-
-		String systemOut = out.toString();
-		String expectedOutput = "Welcome back, Old Deuteronomy!\n"; 
 		
-		assertEquals(expectedOutput, systemOut);
+		Mockito.verify(c2).returnCat();
+		assertEquals("Welcome back, Old Deuteronomy!\n", out.toString());
 	}
 
 	/**
@@ -452,23 +350,17 @@ public class RentACatUnitTest {
 	 */
 	@Test
 	public void testReturnFailureCatNumCats3() {
-		// TODO: Fill in
-		r = RentACat.createInstance(InstanceType.IMPL);
-		c1 = Cat.createInstance(InstanceType.IMPL, 1, "Jennyanydots");
-		c2 = Cat.createInstance(InstanceType.IMPL, 2, "Old Deuteronomy");
-		c3 = Cat.createInstance(InstanceType.IMPL, 3, "Mistoffelees");
-		
 		r.addCat(c1);
 		r.addCat(c2);
 		r.addCat(c3);
-		boolean result = r.returnCat(2);
+		Mockito.when(c2.getRented()).thenReturn(false);
+		Boolean value = r.returnCat(2);
 
-		assertFalse("Expected returnCat to return false when trying to return a cat that is not rented", result);
-	
-		String systemOut = out.toString();
-		String expectedOutput = "Old Deuteronomy is already here!\n"; 
+		assertFalse(value);
+
+		Mockito.verify(c2, times(0)).returnCat();
 		
-		assertEquals( expectedOutput, systemOut);
+		assertEquals("Old Deuteronomy is already here!\n", out.toString());
 	}
 
 }
